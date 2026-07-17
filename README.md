@@ -1,55 +1,62 @@
-# Relay
+<div align="center">
 
-<p align="center">
-  <strong>Local-First Workflow Automation Engine</strong><br />
-  A fast, modular, and privacy-first CLI platform to automate browser tasks, downloads, and social pipelines entirely on your machine.
-</p>
+# ⚡ Relay
 
-<p align="center">
-  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License" />
-  <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey.svg" alt="Platforms" />
-  <img src="https://img.shields.io/badge/status-active%20alpha-orange.svg" alt="Status" />
-  <img src="https://img.shields.io/badge/local--first-100%25-green.svg" alt="Local First" />
-</p>
+### **Your Content, Anywhere. Powered Locally.**
 
----
+Relay is a privacy-first, zero-dependency engine that synchronizes your social media content across platforms directly from your machine. No cloud servers, no subscriptions, no leaked session cookies.
 
-Relay is a developer-focused, extensible CLI engine for orchestrating complex automations without relying on cloud servers or subscription platforms. Every action—from logging into a site and fetching media to downloading videos and updating metadata—is structured as a **Step**. You compose these steps into a Directed Acyclic Graph (DAG) pipeline, and Relay handles execution, logging, state, and credentials locally.
-
-```text
-    [ Instagram URL ] ────> [ Download Step ] ────> [ Video File ]
-                                                           │
-                                                           ▼
-    [ Success Notify ] <─── [ Studio Upload ] <──── [ Form Metadata ]
-```
+[![License: MIT](https://img.shields.io/badge/License-MIT-black.svg?style=flat-square)](LICENSE)
+[![Platforms](https://img.shields.io/badge/Platforms-macOS%20%7C%20Windows%20%7C%20Linux-black.svg?style=flat-square)](#download--quick-install)
+[![Status](https://img.shields.io/badge/Status-Active%20Alpha-orange.svg?style=flat-square)](#)
+[![Security](https://img.shields.io/badge/Security-OS%20Keyring-green.svg?style=flat-square)](#)
 
 ---
 
-## Download & Quick Install
-
-Relay is distributed as a **single standalone binary**. You do not need Python, Node.js, or any system package managers installed.
-
-### macOS and Linux
-```bash
-curl -fsSL https://raw.githubusercontent.com/ntbnaren7/relay/main/install.sh | bash
-```
-
-### Windows (PowerShell)
-```powershell
-irm https://raw.githubusercontent.com/ntbnaren7/relay/main/install.ps1 | iex
-```
-
-> The installer places `relay` on your PATH automatically and removes any OS security prompts (macOS Gatekeeper / Windows SmartScreen) from the downloaded binary.
->
-> On the first pipeline run, Relay detects if the required Chromium browser is missing and installs it automatically — no manual setup required.
-
-*Run `relay update` at any time to check and install upgrades.*
+[Quick Install](#download--quick-install) • [Core Features](#the-relay-experience) • [How it Works](#the-relay-engine) • [Commands](#developer-reference)
 
 ---
 
-## Interactive Command Line Interface
+</div>
 
-Relay features a responsive, rich terminal interface built for rapid task execution and monitoring:
+<br />
+
+## The Relay Experience
+
+Relay bridges platforms seamlessly, allowing you to easily republish your content without compromising security.
+
+<table>
+  <tr>
+    <td width="50%">
+      <h3>🔒 Hardware-Secured Vault</h3>
+      <p>Your passwords, access tokens, and cookies remain fully encrypted using your machine's native hardware vault (macOS Keychain, Windows Credential Manager, or Linux Secret Service).</p>
+      <kbd>Zero-Trust Security</kbd>
+    </td>
+    <td width="50%">
+      <h3>🌐 Stealth Browser Automation</h3>
+      <p>Automate logins and media publishing in an isolated, anti-detect browser environment. Persistently retains session cookies across runs so you only log in once.</p>
+      <kbd>Anti-Detection Layers</kbd>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <h3>🚀 Standalone Executable</h3>
+      <p>Relay compiles into a single precompiled binary. No Python, Node.js, or complex dependencies required to get started.</p>
+      <kbd>Self-Contained Binary</kbd>
+    </td>
+    <td width="50%">
+      <h3>⚡ Resilient Multi-Thread Engine</h3>
+      <p>Download video files with multi-threaded chunking, custom retries, and automated video transcoding to prepare files for platform ingestion.</p>
+      <kbd>Smart Transcoding</kbd>
+    </td>
+  </tr>
+</table>
+
+<br />
+
+## Live Dashboard Preview
+
+Here is how Relay tracks active workflows in your terminal:
 
 ```text
   ┌─────────────────────────────────────────────────────────────┐
@@ -71,30 +78,29 @@ Relay features a responsive, rich terminal interface built for rapid task execut
   └─────────────────────────────────────────────────────────────┘
 ```
 
----
+<br />
 
-## Core Capabilities
+## Download & Quick Install
 
-### 1. Zero-Trust Local Vault
-Credentials, API tokens, and session cookies are never exposed to external servers or cloud databases:
-* **Host Keychain Integration**: Relay hooks directly into your native operating system credential vault (macOS Keychain, Windows Credential Manager, or Linux Secret Service).
-* **Automatic Fallback**: In headless Linux servers, Docker containers, or CI runners where Keychains are unavailable, Relay falls back to a restricted plaintext configuration file (`~/.relay/secrets.json` locked with `0o600` permissions).
-* **Zero-Config Migration**: Plaintext credentials from older legacy files are automatically migrated to your system keychain and deleted from disk upon first run.
+Get up and running with a single copy-paste command. The installer automatically places Relay on your path and configures system security parameters.
 
-### 2. High-Performance Automation Engines
-* **Resilient Downloader**: Integrates native multi-threaded downloader layers with built-in retry schedules, chunked progress tracking, and fallback engines for high-quality audio and video retrieval.
-* **Persistent Browser Contexts**: Utilizes isolated browser profiles with Playwright to maintain login states (cookies, local storage, device finger-prints) safely across execution runs.
-
-### 3. Declartive & Composable Pipelines
-Configure and launch workflows via direct commands or clean configuration trees:
+### macOS and Linux
 ```bash
-# Run a cross-platform synchronization pipeline with one command:
-relay pipeline run insta-to-youtube --url "https://instagram.com/p/ExampleReel"
+curl -fsSL https://raw.githubusercontent.com/ntbnaren7/relay/main/install.sh | bash
 ```
 
----
+### Windows (PowerShell)
+```powershell
+irm https://raw.githubusercontent.com/ntbnaren7/relay/main/install.ps1 | iex
+```
 
-## Architecture Diagram
+*Note: Relay automatically downloads and installs its own Chromium instance when you run your first pipeline, eliminating manual configuration.*
+
+<br />
+
+## The Relay Engine
+
+Relay maps workflows as Directed Acyclic Graphs (DAGs), coordinating downloads, formats, security context, and uploads dynamically.
 
 ```mermaid
 graph TD
@@ -116,39 +122,54 @@ graph TD
     end
 ```
 
----
+<br />
 
-## Developer Guide & Commands
+## Developer Reference
 
-Manage your workflows, execution runs, and configurations using the command-line interface:
+<details>
+<summary><b>🔑 Credential Vault Management</b></summary>
+<br />
 
-### Storing Credentials in the Vault
+Store secrets directly inside your hardware OS keychain:
 ```bash
-# Store a credential securely in your OS keychain:
+# Save your session data safely:
 relay vault set youtube studio_cookie "session_cookie_data_here"
 
-# Retrieve stored values:
+# Retrieve registered keys:
 relay vault get youtube studio_cookie
-```
 
-### Listing Available Workflows
-```bash
-# Display all registered pipelines, automation components, and tools:
-relay list
+# List stored vault keys (values are hidden):
+relay vault list
 ```
+</details>
 
-### Self-Updating
+<details>
+<summary><b>🎬 Running Workflows</b></summary>
+<br />
+
+Execute a pipeline directly with flags:
 ```bash
-# Check version and upgrade the binary to the latest GitHub Release:
+relay run insta_to_youtube --url "https://instagram.com/p/ExampleReel"
+```
+Or run `relay` with no arguments to use the interactive terminal selector.
+</details>
+
+<details>
+<summary><b>🔄 Self-Updating</b></summary>
+<br />
+
+Check for upgrades and download the latest standalone binary releases directly:
+```bash
 relay update
 ```
+</details>
+
+<br />
+
+<div align="center">
 
 ---
 
-## Security & Privacy Statement
+Designed with ⚡ by the Relay Community. Distributed under the MIT License.
 
-Relay is built on local-first and privacy-by-default architecture.
-1. No telemetry or execution logs are ever transmitted outside your machine.
-2. Browser automation sessions are run in your local user directory, preserving cookie privacy.
-3. Keyring integration ensures your high-value secrets (like YouTube tokens or API keys) remain protected under hardware/system-level encryption.
-
+</div>
