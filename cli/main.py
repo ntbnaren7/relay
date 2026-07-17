@@ -126,8 +126,13 @@ def list_pipelines() -> None:
 
 
 @app.callback(invoke_without_command=True)
-def main_callback(ctx: typer.Context) -> None:
-    """Relay interactive workflow starter when run with no arguments."""
+def main_callback(
+    ctx: typer.Context,
+    version: bool = typer.Option(
+        None, "--version", "-v", callback=version_callback, is_eager=True, help="Show version and exit."
+    ),
+) -> None:
+    """Relay: Open-source, local-first workflow automation platform."""
     if ctx.invoked_subcommand is None:
         console.print("[bold magenta]⚡ Welcome to Relay Workflow Engine![/]\n")
         console.print("Select a workflow to launch:")
@@ -271,14 +276,7 @@ def version_callback(value: bool):
         raise typer.Exit()
 
 
-@app.callback()
-def main_callback(
-    version: bool = typer.Option(
-        None, "--version", "-v", callback=version_callback, is_eager=True, help="Show version and exit."
-    ),
-):
-    """Relay: Open-source, local-first workflow automation platform."""
-    pass
+# Base configuration finished. Callback is defined above.
 
 
 def main():
