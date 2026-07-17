@@ -35,10 +35,16 @@ curl -fsSL -o "$TEMP_FILE" "$LATEST_URL"
 chmod +x "$TEMP_FILE"
 mv "$TEMP_FILE" "$INSTALL_DIR/relay"
 
+# Remove macOS quarantine flag so Gatekeeper does not block execution
+if [ "$OS" = "macos" ]; then
+  xattr -d com.apple.quarantine "$INSTALL_DIR/relay" 2>/dev/null || true
+fi
+
 echo "🎉 Relay installed successfully to $INSTALL_DIR/relay"
 
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
   echo "⚠️  Please add $INSTALL_DIR to your PATH to run 'relay' directly."
+  echo "Run: export PATH=\"\$PATH:$INSTALL_DIR\" and add it to your ~/.zshrc or ~/.bashrc"
 else
   echo "🚀 Run 'relay' to get started!"
 fi

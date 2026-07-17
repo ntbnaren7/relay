@@ -27,7 +27,7 @@ Relay is a developer-focused, extensible CLI engine for orchestrating complex au
 
 ## Download & Quick Install
 
-Relay is distributed as a single precompiled binary. You do not need Python, Node.js, or any system package managers installed to use it.
+Relay is distributed as a **single standalone binary**. You do not need Python, Node.js, or any system package managers installed.
 
 ### macOS and Linux
 ```bash
@@ -36,10 +36,14 @@ curl -fsSL https://raw.githubusercontent.com/ntbnaren7/relay/main/install.sh | b
 
 ### Windows (PowerShell)
 ```powershell
-iwr https://raw.githubusercontent.com/ntbnaren7/relay/main/install.ps1 -useb | iex
+irm https://raw.githubusercontent.com/ntbnaren7/relay/main/install.ps1 | iex
 ```
 
-*Note: Once installed, type `relay` to launch the interactive prompt. Run `relay update` at any time to check and install upgrades.*
+> The installer places `relay` on your PATH automatically and removes any OS security prompts (macOS Gatekeeper / Windows SmartScreen) from the downloaded binary.
+>
+> On the first pipeline run, Relay detects if the required Chromium browser is missing and installs it automatically — no manual setup required.
+
+*Run `relay update` at any time to check and install upgrades.*
 
 ---
 
@@ -49,7 +53,7 @@ Relay features a responsive, rich terminal interface built for rapid task execut
 
 ```text
   ┌─────────────────────────────────────────────────────────────┐
-  │  RELAY v0.2.3 • Local Workflow Automation Engine            │
+  │  RELAY v0.2.4 • Local Workflow Automation Engine            │
   ├─────────────────────────────────────────────────────────────┤
   │                                                             │
   │  [Pipelines]                                                │

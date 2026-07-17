@@ -132,7 +132,9 @@ def _ensure_playwright_browsers() -> None:
     """Detect if Playwright Chromium is installed; install it automatically if not.
 
     End-users downloading the standalone binary will not have Chromium installed.
-    This function is called before any pipeline that requires browser automation.
+    This uses Playwright's own bundled Node.js driver (via `compute_driver_executable`)
+    rather than `sys.executable -m playwright`, which fails inside a PyInstaller binary
+    because `sys.executable` points to the compiled binary itself, not Python.
     """
     try:
         from playwright.sync_api import sync_playwright
@@ -143,9 +145,9 @@ def _ensure_playwright_browsers() -> None:
     except Exception:
         pass
 
-    # Chromium not found — install it with user-visible messaging
+    # Chromium not found — install it using Playwright's own bundled Node driver
     console.print(
-        "\n[bold yellow]⚠ Playwright Chromium browser not found on this machine.[/]"
+        "\n[bold yellow]Playwright Chromium browser not found on this machine.[/]"
     )
     console.print(
         "[dim]Relay needs Chromium to automate login and upload. "
@@ -154,18 +156,25 @@ def _ensure_playwright_browsers() -> None:
     console.print("[cyan]Installing Chromium browser...[/]\n")
 
     import subprocess
-    result = subprocess.run(
-        [sys.executable, "-m", "playwright", "install", "chromium"],
-        capture_output=False,  # Stream output directly to terminal
-    )
+    try:
+        from playwright.__main__ import compute_driver_executable
+        node_path, cli_js_path = compute_driver_executable()
+        result = subprocess.run(
+            [str(node_path), str(cli_js_path), "install", "chromium"],
+            capture_output=False,  # Stream output directly to terminal
+        )
+    except Exception as e:
+        console.print(f"[bold red]Failed to locate Playwright driver: {e}[/]")
+        result = type("R", (), {"returncode": 1})()  # Fake failed result
+
     if result.returncode != 0:
         console.print(
-            "[bold red]✖ Failed to install Playwright Chromium automatically.[/]\n"
+            "[bold red]Failed to install Playwright Chromium automatically.[/]\n"
             "[dim]Please run manually:[/] [cyan]playwright install chromium[/]"
         )
         raise typer.Exit(code=1)
 
-    console.print("\n[bold green]✔ Chromium installed successfully! Starting pipeline...[/]\n")
+    console.print("\n[bold green]Chromium installed successfully! Starting pipeline...[/]\n")
 
 
 # ---------------------------------------------------------------------------
