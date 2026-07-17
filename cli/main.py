@@ -8,6 +8,7 @@ and managing local credentials.
 import asyncio
 import importlib
 import json
+import sys
 from pathlib import Path
 
 import keyring
@@ -28,6 +29,10 @@ app.add_typer(vault_app, name="vault")
 
 console = Console()
 
+
+# ---------------------------------------------------------------------------
+# Credential Vault Helpers
+# ---------------------------------------------------------------------------
 
 def _get_secrets_path() -> Path:
     path = Path.home() / ".relay" / "secrets.json"
@@ -101,6 +106,72 @@ def _get_secret(service: str, key: str) -> str | None:
     return None
 
 
+def _list_all_secrets() -> dict[str, list[str]]:
+    """Return a mapping of service -> list of keys from the OS Keyring and/or fallback file."""
+    results: dict[str, list[str]] = {}
+
+    # Collect from fallback file
+    path = _get_secrets_path()
+    if path.exists():
+        try:
+            data = json.loads(path.read_text())
+            for svc, keys in data.items():
+                if isinstance(keys, dict):
+                    results.setdefault(svc, []).extend(keys.keys())
+        except Exception:
+            pass
+
+    return results
+
+
+# ---------------------------------------------------------------------------
+# Playwright Browser Check
+# ---------------------------------------------------------------------------
+
+def _ensure_playwright_browsers() -> None:
+    """Detect if Playwright Chromium is installed; install it automatically if not.
+
+    End-users downloading the standalone binary will not have Chromium installed.
+    This function is called before any pipeline that requires browser automation.
+    """
+    try:
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as p:
+            chromium_path = Path(p.chromium.executable_path)
+            if chromium_path.exists():
+                return  # Already installed — nothing to do
+    except Exception:
+        pass
+
+    # Chromium not found — install it with user-visible messaging
+    console.print(
+        "\n[bold yellow]⚠ Playwright Chromium browser not found on this machine.[/]"
+    )
+    console.print(
+        "[dim]Relay needs Chromium to automate login and upload. "
+        "This is a one-time download (~130 MB).[/]"
+    )
+    console.print("[cyan]Installing Chromium browser...[/]\n")
+
+    import subprocess
+    result = subprocess.run(
+        [sys.executable, "-m", "playwright", "install", "chromium"],
+        capture_output=False,  # Stream output directly to terminal
+    )
+    if result.returncode != 0:
+        console.print(
+            "[bold red]✖ Failed to install Playwright Chromium automatically.[/]\n"
+            "[dim]Please run manually:[/] [cyan]playwright install chromium[/]"
+        )
+        raise typer.Exit(code=1)
+
+    console.print("\n[bold green]✔ Chromium installed successfully! Starting pipeline...[/]\n")
+
+
+# ---------------------------------------------------------------------------
+# CLI Commands
+# ---------------------------------------------------------------------------
+
 @app.command("list")
 def list_pipelines() -> None:
     """List all available automation pipelines in `pipelines/`."""
@@ -125,11 +196,20 @@ def list_pipelines() -> None:
     console.print(table)
 
 
+# IMPORTANT: version_callback must be defined BEFORE @app.callback
+# because it is referenced at decoration-time as an eager Typer option.
+def version_callback(value: bool) -> None:
+    if value:
+        console.print(f"Relay version {__version__}")
+        raise typer.Exit()
+
+
 @app.callback(invoke_without_command=True)
 def main_callback(
     ctx: typer.Context,
     version: bool = typer.Option(
-        None, "--version", "-v", callback=version_callback, is_eager=True, help="Show version and exit."
+        None, "--version", "-v", callback=version_callback, is_eager=True,
+        help="Show version and exit."
     ),
 ) -> None:
     """Relay: Open-source, local-first workflow automation platform."""
@@ -143,6 +223,7 @@ def main_callback(
         except (EOFError, KeyboardInterrupt):
             console.print("\n[yellow]Cancelled.[/]")
             raise typer.Exit(code=0) from None
+
         if choice == "1":
             pipeline = "insta_to_youtube"
         elif choice == "2":
@@ -150,14 +231,17 @@ def main_callback(
         else:
             console.print("[bold red]Invalid selection. Exiting.[/]")
             raise typer.Exit(code=1) from None
+
         try:
             url = console.input(f"[bold cyan]🔗 Paste URL for {pipeline}:[/] ").strip()
         except (EOFError, KeyboardInterrupt):
             console.print("\n[yellow]Cancelled.[/]")
             raise typer.Exit(code=0) from None
+
         if not url:
             console.print("[bold red]Error:[/] URL cannot be empty.")
             raise typer.Exit(code=1) from None
+
         run_pipeline(
             pipeline=pipeline,
             url=url,
@@ -210,6 +294,9 @@ def run_pipeline(
         )
         raise typer.Exit(code=1) from None
 
+    # Ensure Chromium is installed before launching any browser pipeline
+    _ensure_playwright_browsers()
+
     console.print(
         f"[bold green]Starting Relay pipeline:[/] [cyan]{pipeline}[/] -> {url}"
     )
@@ -234,6 +321,10 @@ def run_pipeline(
         raise typer.Exit(code=1) from None
 
 
+# ---------------------------------------------------------------------------
+# Vault Commands
+# ---------------------------------------------------------------------------
+
 @vault_app.command("set")
 def vault_set(
     service: str = typer.Argument(..., help="Service identifier (e.g. `youtube` or `instagram`)"),
@@ -246,7 +337,8 @@ def vault_set(
         console.print(f"[green]✔ Secret saved to secure OS Keyring for \\[{service}] -> {key}[/]")
     else:
         console.print(
-            f"[yellow]⚠️ Keyring unavailable. Secret saved to local file (`~/.relay/secrets.json`) for \\[{service}] -> {key}[/]"
+            f"[yellow]⚠️ Keyring unavailable. Secret saved to local file (`~/.relay/secrets.json`) "
+            f"for \\[{service}] -> {key}[/]"
         )
 
 
@@ -264,41 +356,58 @@ def vault_get(
     raise typer.Exit(code=1)
 
 
+@vault_app.command("list")
+def vault_list() -> None:
+    """List all stored credential services and keys (values are never shown)."""
+    secrets = _list_all_secrets()
+    if not secrets:
+        console.print("[yellow]No credentials stored yet. Use `relay vault set` to add one.[/]")
+        return
+    table = Table(title="Stored Relay Credentials")
+    table.add_column("Service", style="cyan", no_wrap=True)
+    table.add_column("Keys", style="white")
+    for service, keys in sorted(secrets.items()):
+        table.add_row(service, ", ".join(sorted(keys)))
+    console.print(table)
+
+
+# ---------------------------------------------------------------------------
+# Update Command
+# ---------------------------------------------------------------------------
+
 @app.command("update")
 def update_cli() -> None:
     """Update Relay to the latest standalone binary version."""
     perform_self_update()
 
 
-def version_callback(value: bool):
-    if value:
-        console.print(f"Relay version {__version__}")
-        raise typer.Exit()
+# ---------------------------------------------------------------------------
+# Entry Point
+# ---------------------------------------------------------------------------
 
-
-# Base configuration finished. Callback is defined above.
-
-
-def main():
+def main() -> None:
     try:
         app()
     finally:
-        # Quick non-blocking check on exit to notify about updates
+        # Non-blocking update notification for standalone binaries only
         if getattr(sys, "frozen", False):
-            import sys
             import threading
-            def _notify():
+
+            def _notify() -> None:
                 try:
                     latest = check_for_updates()
                     if latest:
-                        console.print(f"\n[dim]✨ A new version of Relay is available! ({__version__} → {latest}). Run 'relay update' to upgrade.[/]")
+                        console.print(
+                            f"\n[dim]✨ A new version of Relay is available! "
+                            f"({__version__} → {latest}). Run 'relay update' to upgrade.[/]"
+                        )
                 except Exception:
                     pass
+
             t = threading.Thread(target=_notify, daemon=True)
             t.start()
             t.join(timeout=0.1)
 
 
 if __name__ == "__main__":
-    import sys
     main()

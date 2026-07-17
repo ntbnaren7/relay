@@ -14,7 +14,7 @@ from apps.instagram import download_reel, extract_metadata
 from apps.youtube import upload_video_to_studio
 from automation.browser import PlaywrightManager
 from automation.downloader import transcode_video
-from automation.uploader import format_progress_message
+from automation.media_utils import format_progress_message
 
 
 async def run(
@@ -32,7 +32,7 @@ async def run(
         if progress_callback:
             progress_callback(msg)
 
-    _notify(format_progress_message("instagram.download", 10, 100))
+    _notify("[instagram.download] Downloading reel...")
     meta = await extract_metadata(url)
     download_res = await download_reel(url, output_dir=output_dir)
 
@@ -40,7 +40,7 @@ async def run(
     title = meta.get("title") or download_res.get("title", "Instagram Reel")
     description = meta.get("description") or download_res.get("description", f"Reel from {url}")
 
-    _notify(format_progress_message("automation.transcode", 50, 100))
+    _notify("[automation.transcode] Transcoding video...")
     # Ensure standard MP4 compatibility before Studio ingestion
     processed_path = raw_path.parent / f"processed_{raw_path.name}"
     try:
@@ -48,7 +48,7 @@ async def run(
     except Exception:
         final_path = raw_path
 
-    _notify(format_progress_message("youtube.upload", 80, 100))
+    _notify("[youtube.upload] Uploading to YouTube Studio...")
     browser_manager = PlaywrightManager()
     try:
         upload_res = await upload_video_to_studio(
@@ -63,7 +63,7 @@ async def run(
     finally:
         await browser_manager.close_all()
 
-    _notify(format_progress_message("pipeline.completed", 100, 100))
+    _notify("[pipeline.completed] Done.")
     return {
         "status": "SUCCESS",
         "instagram_url": url,

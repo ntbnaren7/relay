@@ -1,3 +1,9 @@
+# ROADMAP EXAMPLE — NOT EXECUTABLE
+# This file describes a future declarative step-based workflow engine
+# that has not yet been implemented. Steps like `instagram.download`,
+# `common.ffmpeg`, and `common.notify` are aspirational step types.
+# See docs/ARCHITECTURE.md for the current actual implementation.
+#
 # Relay Automation Workflow Example
 # Instagram Reel Download -> Transcode via FFmpeg -> Upload to YouTube Studio -> Notification
 

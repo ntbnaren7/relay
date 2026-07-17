@@ -64,6 +64,7 @@ venv.bak/
 # Relay local storage & runtime state
 .relay/
 relay.db
+relay_state.db
 *.sqlite
 *.sqlite3
 media_cache/

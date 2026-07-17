@@ -83,18 +83,20 @@ async def upload_video_to_studio(
                     console.input(
                         "[bold white]👉 Press [Enter] here once done to save & close...[/]"
                     )
-                except (EOFError, KeyboardInterrupt):
+                except (EOFError, KeyboardInterrupt, OSError):
                     pass
                 await browser_manager.save_profile(profile_name)
         finally:
             await driver.close()
 
     video_id = f"yt_{abs(hash(str(path))) % 100000000:08d}"
+    # No browser_manager was provided — return a clear placeholder status.
+    # A real upload requires a browser session. This path is used in unit tests only.
     return {
         "video_id": video_id,
         "url": f"https://youtu.be/{video_id}",
         "title": title,
         "description": description,
         "privacy": privacy,
-        "status": "UPLOADED",
+        "status": "NO_BROWSER_SESSION",
     }

@@ -12,6 +12,7 @@ from cli.main import _get_secret, _migrate_legacy_secrets, _save_secret
 @pytest.fixture
 def mock_secrets_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     target_path = tmp_path / ".relay" / "secrets.json"
+    target_path.parent.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr("cli.main._get_secrets_path", lambda: target_path)
     return target_path
 

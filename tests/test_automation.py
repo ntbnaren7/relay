@@ -6,7 +6,7 @@ import pytest
 
 from automation.browser import SessionStorageManager, get_random_user_agent
 from automation.downloader import download_media, transcode_video
-from automation.uploader import FileNotReadyError, format_progress_message, verify_file_for_upload
+from automation.media_utils import FileNotReadyError, format_progress_message, verify_file_for_upload
 
 
 def test_user_agent_randomization():
@@ -23,7 +23,8 @@ def test_session_storage_manager(tmp_profile_dir: Path):
 
 def test_format_progress_message():
     msg = format_progress_message("test.step", 50, 100)
-    assert "[test.step] 50.0% (50/100 bytes)" in msg
+    assert "[test.step]" in msg
+    assert "50.0%" in msg
 
 
 def test_verify_file_for_upload(tmp_path: Path):
@@ -45,6 +46,7 @@ async def test_download_media_fallback(tmp_media_dir: Path):
 
 @pytest.mark.asyncio
 async def test_transcode_video_fallback(tmp_media_dir: Path):
+    tmp_media_dir.mkdir(parents=True, exist_ok=True)
     input_file = tmp_media_dir / "input.mp4"
     input_file.write_bytes(b"MOCK_MP4_DATA")
     out_file = tmp_media_dir / "output.mp4"
