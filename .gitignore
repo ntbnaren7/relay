@@ -27,7 +27,7 @@ share/python-wheels/
 
 # PyInstaller
 *.manifest
-*.spec
+# *.spec  (Spec files should be version controlled for CI/CD)
 
 # Unit test / coverage reports
 htmlcov/
