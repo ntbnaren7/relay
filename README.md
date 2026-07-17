@@ -28,24 +28,24 @@ Relay bridges platforms seamlessly, allowing you to easily republish your conten
 <table>
   <tr>
     <td width="50%">
-      <h3>🔒 Hardware-Secured Vault</h3>
+      <h3>Hardware-Secured Vault</h3>
       <p>Your passwords, access tokens, and cookies remain fully encrypted using your machine's native hardware vault (macOS Keychain, Windows Credential Manager, or Linux Secret Service).</p>
       <kbd>Zero-Trust Security</kbd>
     </td>
     <td width="50%">
-      <h3>🌐 Stealth Browser Automation</h3>
+      <h3>Stealth Browser Automation</h3>
       <p>Automate logins and media publishing in an isolated, anti-detect browser environment. Persistently retains session cookies across runs so you only log in once.</p>
       <kbd>Anti-Detection Layers</kbd>
     </td>
   </tr>
   <tr>
     <td width="50%">
-      <h3>🚀 Standalone Executable</h3>
+      <h3>Standalone Executable</h3>
       <p>Relay compiles into a single precompiled binary. No Python, Node.js, or complex dependencies required to get started.</p>
       <kbd>Self-Contained Binary</kbd>
     </td>
     <td width="50%">
-      <h3>⚡ Resilient Multi-Thread Engine</h3>
+      <h3>Resilient Multi-Thread Engine</h3>
       <p>Download video files with multi-threaded chunking, custom retries, and automated video transcoding to prepare files for platform ingestion.</p>
       <kbd>Smart Transcoding</kbd>
     </td>
