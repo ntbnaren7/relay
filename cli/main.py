@@ -15,6 +15,9 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from cli.update import check_for_updates, perform_self_update
+from cli.version import __version__
+
 app = typer.Typer(
     name="relay",
     help="Relay: Open-source, local-first workflow automation platform.",
@@ -256,5 +259,48 @@ def vault_get(
     raise typer.Exit(code=1)
 
 
+@app.command("update")
+def update_cli() -> None:
+    """Update Relay to the latest standalone binary version."""
+    perform_self_update()
+
+
+def version_callback(value: bool):
+    if value:
+        console.print(f"Relay version {__version__}")
+        raise typer.Exit()
+
+
+@app.callback()
+def main_callback(
+    version: bool = typer.Option(
+        None, "--version", "-v", callback=version_callback, is_eager=True, help="Show version and exit."
+    ),
+):
+    """Relay: Open-source, local-first workflow automation platform."""
+    pass
+
+
+def main():
+    try:
+        app()
+    finally:
+        # Quick non-blocking check on exit to notify about updates
+        if getattr(sys, "frozen", False):
+            import sys
+            import threading
+            def _notify():
+                try:
+                    latest = check_for_updates()
+                    if latest:
+                        console.print(f"\n[dim]✨ A new version of Relay is available! ({__version__} → {latest}). Run 'relay update' to upgrade.[/]")
+                except Exception:
+                    pass
+            t = threading.Thread(target=_notify, daemon=True)
+            t.start()
+            t.join(timeout=0.1)
+
+
 if __name__ == "__main__":
-    app()
+    import sys
+    main()

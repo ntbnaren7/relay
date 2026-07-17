@@ -1,0 +1,59 @@
+name: Release Binary
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }} (${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-13
+            arch: x64
+            artifact_name: relay
+            asset_name: relay-macos-x64
+          - os: macos-latest
+            arch: arm64
+            artifact_name: relay
+            asset_name: relay-macos-arm64
+          - os: ubuntu-latest
+            arch: x64
+            artifact_name: relay
+            asset_name: relay-linux-x64
+          - os: windows-latest
+            arch: x64
+            artifact_name: relay.exe
+            asset_name: relay-windows-x64.exe
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
+
+      - name: Sync dependencies
+        run: uv sync
+
+      - name: Build with PyInstaller
+        run: uv run pyinstaller relay.spec
+
+      - name: Rename Binary
+        run: |
+          mv dist/${{ matrix.artifact_name }} dist/${{ matrix.asset_name }}
+        if: runner.os != 'Windows'
+        
+      - name: Rename Binary (Windows)
+        run: |
+          Rename-Item -Path dist\${{ matrix.artifact_name }} -NewName ${{ matrix.asset_name }}
+        if: runner.os == 'Windows'
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release'
+        with:
+          files: dist/${{ matrix.asset_name }}

@@ -2,6 +2,24 @@
 
 **Relay** is a local-first, open-source automation engine for building composable workflows across applications and services.
 
+## 🚀 Download & Install
+
+You don't need Python or any dependencies installed. Run this single command to download the standalone binary:
+
+**macOS & Linux:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/ntbnaren7/relay/main/install.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+iwr https://raw.githubusercontent.com/ntbnaren7/relay/main/install.ps1 -useb | iex
+```
+
+Once installed, simply type `relay` in your terminal! Relay will automatically check for updates and can be upgraded seamlessly anytime by running `relay update`.
+
+---
+
 Rather than solving a single automation task, Relay provides a modular execution engine where every action—downloading, transforming, generating, uploading, or notifying—is represented as a reusable **Step**. Workflows are composed as Directed Acyclic Graphs (DAGs), allowing complex automations to be built from simple, independent components.
 
 The first supported workflow is:
