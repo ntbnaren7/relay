@@ -1,0 +1,47 @@
+# Relay Automation Workflow Example
+# Instagram Reel Download -> Transcode via FFmpeg -> Upload to YouTube Studio -> Notification
+
+version: "1.0"
+name: "instagram_to_youtube_studio"
+description: "Automatically download an Instagram Reel, transcode/process video, upload to YouTube Studio, and trigger notification."
+
+variables:
+  target_url: "https://www.instagram.com/reel/C1234567890/"
+  privacy_status: "unlisted"
+  notification_msg: "Reel successfully published to YouTube Studio."
+
+steps:
+  # Step 1: Download video reel using Playwright browser automation
+  - name: "download_reel"
+    uses: "instagram.download"
+    with:
+      url: "{{ target_url }}"
+
+  # Step 2: Extract post metadata (caption, tags, author info) in parallel
+  - name: "extract_meta"
+    uses: "instagram.extract_metadata"
+    with:
+      url: "{{ target_url }}"
+
+  # Step 3: Transcode / standardize video file using FFmpeg
+  - name: "transcode_video"
+    uses: "common.ffmpeg"
+    depends_on: ["download_reel"]
+    with:
+      codec: "copy"
+      output_name: "final_reel.mp4"
+
+  # Step 4: Upload video to YouTube Studio with extracted metadata and account profile
+  - name: "upload_to_youtube"
+    uses: "youtube.upload"
+    depends_on: ["transcode_video", "extract_meta"]
+    with:
+      privacy: "{{ privacy_status }}"
+      profile: "main_channel"
+
+  # Step 5: Send notification / webhook alert after upload completes
+  - name: "send_notification"
+    uses: "common.notify"
+    depends_on: ["upload_to_youtube"]
+    with:
+      message: "{{ notification_msg }}"
