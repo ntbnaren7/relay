@@ -43,7 +43,7 @@ dev = [
 relay = "cli.main:app"
 
 [tool.hatch.build.targets.wheel]
-packages = ["apps", "pipelines", "automation", "cli", "desktop"]
+packages = ["apps", "pipelines", "automation", "cli"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"

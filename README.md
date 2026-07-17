@@ -25,4 +25,4 @@ Instagram URL
 * 🖥️ Cross-platform (Windows, macOS & Linux)
 * 📦 Extensible by design
 
-> **Status:** 🚧 Early development. The architecture is being established before implementation begins.
+> **Status:** 🚀 Active alpha. Core platforms (`instagram`, `youtube`, `tiktok`, `reddit`), automation engines (`browser`, `downloader`, `uploader`), and pipelines are functional.

@@ -9,7 +9,7 @@ import random
 from pathlib import Path
 from typing import Any
 
-from playwright.async_api import Browser, BrowserContext, Page, Playwright, async_playwright
+from playwright.async_api import BrowserContext, Page, Playwright, async_playwright
 
 USER_AGENTS = [
     (
@@ -99,32 +99,8 @@ class PlaywrightManager:
             profiles_dir = Path.home() / ".relay" / "profiles"
         self.session_manager = SessionStorageManager(profiles_dir)
         self._playwright: Playwright | None = None
-        self._browser: Browser | None = None
         self._contexts: dict[str, BrowserContext] = {}
         self._lock = asyncio.Lock()
-
-    async def _ensure_browser(self, headless: bool = True) -> Browser:
-        async with self._lock:
-            if not self._playwright:
-                self._playwright = await async_playwright().start()
-            if not self._browser or not self._browser.is_connected():
-                launch_args = [
-                    "--disable-blink-features=AutomationControlled",
-                    "--disable-infobars",
-                    "--no-sandbox",
-                ]
-                try:
-                    self._browser = await self._playwright.chromium.launch(
-                        headless=headless,
-                        channel="chrome",
-                        args=launch_args,
-                    )
-                except Exception:
-                    self._browser = await self._playwright.chromium.launch(
-                        headless=headless,
-                        args=launch_args,
-                    )
-        return self._browser
 
     async def get_driver(
         self,
@@ -196,20 +172,9 @@ class PlaywrightManager:
                     pass
             self._contexts.clear()
 
-            if self._browser:
-                try:
-                    await self._browser.close()
-                except Exception:
-                    pass
-                self._browser = None
-
             if self._playwright:
                 try:
                     await self._playwright.stop()
                 except Exception:
                     pass
                 self._playwright = None
-
-    async def shutdown_all(self) -> None:
-        """Alias for close_all."""
-        await self.close_all()

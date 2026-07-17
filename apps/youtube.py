@@ -37,22 +37,16 @@ async def upload_video_to_studio(
     if browser_manager:
         driver = await browser_manager.get_driver(profile_name=profile_name, headless=headless)
         try:
-            await driver.goto("https://studio.youtube.com/", wait_until="domcontentloaded")
-            content = await driver.get_content()
-            if "accounts.google.com/signin" in content or "Sign in" in content:
-                from rich.console import Console
+            from rich.console import Console
 
-                console = Console()
+            console = Console()
+            if not await verify_studio_login(driver):
                 console.print(
                     "\n[bold yellow]🔐 First-time setup:[/] Please log into Google in browser."
                 )
                 console.print("[dim]Relay is waiting for you to land on YouTube Studio...[/]")
                 await driver.page.wait_for_url("**/studio.youtube.com/**", timeout=0)
                 await browser_manager.save_profile(profile_name)
-
-            from rich.console import Console
-
-            console = Console()
             attached = False
             try:
                 create_sel = (
