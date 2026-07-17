@@ -49,7 +49,7 @@ Relay features a responsive, rich terminal interface built for rapid task execut
 
 ```text
   ┌─────────────────────────────────────────────────────────────┐
-  │  RELAY v0.2.0 • Local Workflow Automation Engine            │
+  │  RELAY v0.2.1 • Local Workflow Automation Engine            │
   ├─────────────────────────────────────────────────────────────┤
   │                                                             │
   │  [Pipelines]                                                │
