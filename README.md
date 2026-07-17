@@ -25,4 +25,10 @@ Instagram URL
 * 🖥️ Cross-platform (Windows, macOS & Linux)
 * 📦 Extensible by design
 
+## Security & Privacy
+
+* **100% Local-First:** All execution happens locally on your machine. Absolutely zero data, session cookies, or credentials are ever sent to external servers or cloud providers.
+* **Encrypted Credential Vault:** Credentials managed via `relay vault` (`set` and `get`) are stored directly inside your operating system's built-in secure credential store (macOS Keychain, Windows Credential Manager, or Linux Secret Service) using the `keyring` library.
+* **Seamless Fallback & Migration:** If an OS keychain is unavailable (e.g., in headless CI/CD containers), Relay securely falls back to a permission-locked local file (`~/.relay/secrets.json` with `0o600` permissions). Any existing plaintext credentials are automatically migrated to your OS Keyring on first access and wiped from disk.
+
 > **Status:** 🚀 Active alpha. Core platforms (`instagram`, `youtube`, `tiktok`, `reddit`), automation engines (`browser`, `downloader`, `uploader`), and pipelines are functional.

@@ -10,6 +10,7 @@ import importlib
 import json
 from pathlib import Path
 
+import keyring
 import typer
 from rich.console import Console
 from rich.table import Table
@@ -29,6 +30,72 @@ def _get_secrets_path() -> Path:
     path = Path.home() / ".relay" / "secrets.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     return path
+
+
+def _migrate_legacy_secrets() -> None:
+    """Automatically migrate plaintext credentials from ~/.relay/secrets.json into Keyring."""
+    path = _get_secrets_path()
+    if not path.exists():
+        return
+    try:
+        data = json.loads(path.read_text())
+        if not isinstance(data, dict) or not data:
+            return
+        migrated_any = False
+        for service, keys in data.items():
+            if isinstance(keys, dict):
+                for key, val in keys.items():
+                    if isinstance(val, str):
+                        try:
+                            keyring.set_password(f"relay.{service}", key, val)
+                            migrated_any = True
+                        except Exception:
+                            return  # If keyring fails, keep secrets.json for fallback
+        if migrated_any:
+            path.unlink(missing_ok=True)
+            console.print("[dim green]✔ Migrated legacy plaintext secrets to secure OS Keyring.[/]")
+    except Exception:
+        pass
+
+
+def _save_secret(service: str, key: str, value: str) -> bool:
+    """Save secret to secure OS Keyring, falling back to local file if keyring is unavailable."""
+    _migrate_legacy_secrets()
+    try:
+        keyring.set_password(f"relay.{service}", key, value)
+        return True
+    except Exception:
+        path = _get_secrets_path()
+        data = {}
+        if path.exists():
+            try:
+                data = json.loads(path.read_text())
+            except Exception:
+                data = {}
+        data.setdefault(service, {})[key] = value
+        path.write_text(json.dumps(data, indent=2))
+        path.chmod(0o600)
+        return False
+
+
+def _get_secret(service: str, key: str) -> str | None:
+    """Retrieve secret from secure OS Keyring, falling back to local file if needed."""
+    _migrate_legacy_secrets()
+    try:
+        val = keyring.get_password(f"relay.{service}", key)
+        if val is not None:
+            return val
+    except Exception:
+        pass
+
+    path = _get_secrets_path()
+    if path.exists():
+        try:
+            data = json.loads(path.read_text())
+            return data.get(service, {}).get(key)
+        except Exception:
+            pass
+    return None
 
 
 @app.command("list")
@@ -165,18 +232,14 @@ def vault_set(
     key: str = typer.Argument(..., help="Credential key (e.g. `username` or `api_key`)"),
     value: str = typer.Argument(..., help="Secret value to store"),
 ) -> None:
-    """Save a secret credential locally (`~/.relay/secrets.json`)."""
-    path = _get_secrets_path()
-    data = {}
-    if path.exists():
-        try:
-            data = json.loads(path.read_text())
-        except Exception:
-            data = {}
-    data.setdefault(service, {})[key] = value
-    path.write_text(json.dumps(data, indent=2))
-    path.chmod(0o600)
-    console.print(f"[green]✔ Secret saved for [{service}] -> {key}[/]")
+    """Save a secret credential locally via secure OS Keyring (macOS Keychain, etc.)."""
+    secure = _save_secret(service, key, value)
+    if secure:
+        console.print(f"[green]✔ Secret saved to secure OS Keyring for \\[{service}] -> {key}[/]")
+    else:
+        console.print(
+            f"[yellow]⚠️ Keyring unavailable. Secret saved to local file (`~/.relay/secrets.json`) for \\[{service}] -> {key}[/]"
+        )
 
 
 @vault_app.command("get")
@@ -184,18 +247,12 @@ def vault_get(
     service: str = typer.Argument(..., help="Service identifier"),
     key: str = typer.Argument(..., help="Credential key"),
 ) -> None:
-    """Retrieve a stored secret credential."""
-    path = _get_secrets_path()
-    if path.exists():
-        try:
-            data = json.loads(path.read_text())
-            val = data.get(service, {}).get(key)
-            if val is not None:
-                console.print(f"[cyan]{val}[/]")
-                return
-        except Exception:
-            pass
-    console.print(f"[yellow]No secret found for [{service}] -> {key}[/]")
+    """Retrieve a stored secret credential from OS Keyring or local fallback."""
+    val = _get_secret(service, key)
+    if val is not None:
+        console.print(f"[cyan]{val}[/]")
+        return
+    console.print(f"[yellow]No secret found for \\[{service}] -> {key}[/]")
     raise typer.Exit(code=1)
 
 
